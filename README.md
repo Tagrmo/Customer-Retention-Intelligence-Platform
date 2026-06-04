@@ -63,19 +63,19 @@ Performance:
 
 ### Main Dashboard
 
-![Dashboard](images/dashboard.png)
+![Dashboard](images/dashboard1.png)
 
 ### Customer Segmentation
 
-![Segmentation](images/segmentation.png)
+![Segmentation](images/dashboard2.png)
 
 ### Churn Prediction
 
-![Prediction](images/prediction.png)
+![Prediction](images/dashboard3.png)
 
 ### Executive Report
 
-![Report](images/executive-report.png)
+![Report](images/dashboard4.png)
 
 ---
 
