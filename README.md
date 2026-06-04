@@ -63,7 +63,7 @@ Performance:
 
 ### Main Dashboard
 
-![Dashboard](images/dashboard1.png)
+![Dashboard](images/dashboard4.png)
 
 ### Customer Segmentation
 
@@ -75,7 +75,7 @@ Performance:
 
 ### Executive Report
 
-![Report](images/dashboard4.png)
+![Report](images/dashboard1.png)
 
 ---
 
