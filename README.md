@@ -105,7 +105,14 @@ streamlit run app.py
 - XGBoost Model
 - SHAP Explainability
 - Real-Time API
-- Power BI Integration
+## Power BI Dashboard
+
+This project also includes an interactive Power BI dashboard for customer churn analysis.
+
+![Power BI Dashboard](images/powerbi-dashboard.png)
+
+Power BI file:
+`Customer Churn Intelligence Dashboard.pbix`
 
 ---
 
