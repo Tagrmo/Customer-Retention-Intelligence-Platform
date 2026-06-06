@@ -107,13 +107,25 @@ streamlit run app.py
 - Real-Time API
 ## Power BI Dashboard
 
-This project also includes an interactive Power BI dashboard for customer churn analysis.
+Customer churn analysis dashboard built using Power BI.
+
+### KPIs
+- Total Customers: 7043
+- Churned Customers: 1869
+- Retained Customers: 5174
+- Churn Rate: 26.54%
+- Retention Rate: 73.46%
+
+### Key Insights
+- Month-to-Month contracts have the highest churn.
+- Electronic Check users are more likely to churn.
+- Fiber Optic customers show the highest churn behavior.
+
 
 ![Power BI Dashboard](images/powerbi-dashboard.png)
 
 Power BI file:
 `Customer Churn Intelligence Dashboard.pbix`
-
 ---
 
 ## Author
