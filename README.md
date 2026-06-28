@@ -1,131 +1,93 @@
-# Customer Retention Intelligence Platform
+# 👥 Customer Retention Intelligence Platform
 
-AI-powered customer churn prediction and retention analytics platform built with Python, Machine Learning, and Streamlit.
+An interactive customer analytics platform developed to analyze customer churn patterns, identify retention risks, and support business decision-making through data visualization and machine learning.
 
----
-
-## Project Overview
-
-Customer churn is one of the biggest challenges for subscription-based businesses.
-
-This project provides:
-
-- Customer churn prediction
-- Customer segmentation
-- Retention risk scoring
-- Executive reporting
-- Interactive business dashboard
+The project combines a Streamlit application, predictive modeling, and a Power BI dashboard to help explore customer behavior and improve customer retention strategies.
 
 ---
 
-## Features
+## 🌐 Live Demo
 
-### Executive Dashboard
-
-- Total customers
-- Churned customers
-- Retention rate
-- Business KPIs
-
-### Customer Segmentation
-
-Filter customers by:
-
-- Contract type
-- Internet service
-- Churn status
-
-### AI Churn Prediction
-
-Predict customer churn risk using a trained Machine Learning model.
-
-### Executive Reporting
-
-Generate business reports in PDF format.
+https://customer-retention-intelligence-platform-zvbxhewmfn6rc9wynmtgl.streamlit.app/
 
 ---
 
-## Machine Learning Model
+## 📌 Features
 
-Algorithm:
-
-- Random Forest Classifier
-
-Performance:
-
-- Accuracy: 78.9%
-- Precision: 82%
-- Recall: 91%
-
----
-
-## Dashboard Screenshots
-
-### Main Dashboard
-
-
-
-
-
-![Screenshots1](images/dashboard1.png)
-
-
-
-![Screenshots2](images/dashboard2.png)
-
-
-
-![Screenshots](images/dashboard3.png)
+* Customer churn prediction
+* Interactive customer dashboard
+* Customer segmentation
+* Contract type analysis
+* Internet service analysis
+* Payment method analysis
+* Customer tenure analysis
+* Power BI executive dashboard
+* PDF report generation
 
 ---
 
-## Technologies Used
+## 🛠 Technologies
 
-- Python
-- Pandas
-- NumPy
-- Scikit-Learn
-- Streamlit
-- Plotly
-- Joblib
-
----
-
-## Installation
-
-```bash
-pip install -r requirements.txt
-streamlit run app.py
-```
+* Python
+* Streamlit
+* Pandas
+* NumPy
+* Scikit-learn
+* Plotly
+* Power BI
+* Joblib
 
 ---
 
-## Future Improvements
+## 📷 Project Preview
 
-- XGBoost Model
-- SHAP Explainability
-- Real-Time API
-## Power BI Dashboard
-
-Customer churn analysis dashboard built using Power BI.
-
-### KPIs
-- Total Customers: 7043
-- Churned Customers: 1869
-- Retained Customers: 5174
-- Churn Rate: 26.54%
-- Retention Rate: 73.46%
-
-### Key Insights
-- Month-to-Month contracts have the highest churn.
-- Electronic Check users are more likely to churn.
-- Fiber Optic customers show the highest churn behavior.
-### Power BI Dashboard
+### 📊 Power BI Dashboard
 
 ![Power BI Dashboard](images/dashboard4.png)
 
+
+### 🌐 Streamlit Application
+
+![Streamlit Application](images/dashboard1.png)
+
 ---
 
-## Author
+## 🤖 Machine Learning
 
-Taghreed Mohammed
+**Algorithm**
+
+* Random Forest Classifier
+
+**Model Performance**
+
+* Accuracy: **78.9%**
+* Precision: **82%**
+* Recall: **91%**
+
+---
+
+## 🎯 Skills Demonstrated
+
+* Data Analysis
+* Business Intelligence
+* Data Visualization
+* Machine Learning
+* Classification Modeling
+* Predictive Analytics
+* Dashboard Development
+* Python Programming
+
+---
+
+## 💡 Project Summary
+
+This project was developed to analyze customer churn behavior and highlight the main factors affecting customer retention.
+
+Users can explore customer segments through interactive dashboards, visualize churn patterns across different business dimensions, and predict customer churn using a trained machine learning model.
+
+---
+
+## 👩‍💻 Author
+
+**Taghreed Mohammed**
+
