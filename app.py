@@ -1,926 +1,980 @@
-# ==========================================
-# Customer Retention Intelligence Platform
-# Streamlit Dashboard
-# ==========================================
-
 import streamlit as st
 import pandas as pd
-import matplotlib.pyplot as plt
 import joblib
-import numpy as np
+import plotly.express as px
 import plotly.graph_objects as go
-from reportlab.platypus import (
-    SimpleDocTemplate,
-    Paragraph,
-    Spacer
-)
-
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
 from reportlab.lib.styles import getSampleStyleSheet
 from datetime import datetime
-# ==========================================
-# Page Configuration
-# ==========================================
 
 st.set_page_config(
     page_title="Customer Retention Intelligence Platform",
-    page_icon="📊",
+    page_icon="💼",
     layout="wide"
 )
 
+# =========================
+# Styling
+# =========================
 
-# ==========================================
-# Custom Styling
-# ==========================================
+st.markdown("""
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
 
-st.markdown(
-    """
-    <style>
-        .main {
-            background-color: #F7F9FC;
-        }
+html, body, [class*="css"] {
+    font-family: 'Inter', sans-serif;
+}
 
-        .block-container {
-            padding-top: 2rem;
-            padding-bottom: 2rem;
-        }
+.stApp {
+    background:
+        radial-gradient(circle at 18% 10%, rgba(37,99,235,0.30), transparent 32%),
+        radial-gradient(circle at 88% 8%, rgba(6,182,212,0.24), transparent 28%),
+        radial-gradient(circle at 50% 100%, rgba(30,64,175,0.18), transparent 35%),
+        linear-gradient(135deg, #020617 0%, #07111F 42%, #08213A 100%);
+    color: #F8FAFC;
+}
 
-        .hero-card {
-            background: linear-gradient(135deg, #0F172A 0%, #1E3A8A 100%);
-            padding: 32px;
-            border-radius: 22px;
-            color: white;
-            margin-bottom: 28px;
-            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.20);
-        }
+.block-container {
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+}
 
-        .hero-title {
-            font-size: 38px;
-            font-weight: 800;
-            margin-bottom: 10px;
-        }
+/* =========================
+   SIDEBAR
+========================= */
+section[data-testid="stSidebar"] {
+    background:
+        radial-gradient(circle at top left, rgba(37,99,235,0.24), transparent 35%),
+        linear-gradient(180deg, #020617 0%, #061527 52%, #08213A 100%) !important;
+    border-right: 1px solid rgba(125,211,252,0.25);
+}
 
-        .hero-subtitle {
-            font-size: 17px;
-            color: #DBEAFE;
-            max-width: 850px;
-            line-height: 1.6;
-        }
+.sidebar-hero {
+    background: rgba(15,23,42,0.78);
+    border: 1px solid rgba(125,211,252,0.26);
+    border-radius: 20px;
+    padding: 18px;
+    box-shadow: 0 12px 32px rgba(2,6,23,0.35);
+    margin-bottom: 20px;
+}
 
-        .section-title {
-            font-size: 26px;
-            font-weight: 800;
-            color: #0F172A;
-            margin-top: 25px;
-            margin-bottom: 14px;
-        }
+.sidebar-title {
+    color: #FFFFFF !important;
+    font-size: 25px;
+    font-weight: 900;
+    line-height: 1.25;
+    margin-bottom: 8px;
+}
 
-        .insight-box {
-            background-color: white;
-            border-left: 6px solid #2563EB;
-            padding: 18px;
-            border-radius: 14px;
-            margin-bottom: 12px;
-            box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
-        }
+.sidebar-subtitle {
+    color: #BFDBFE !important;
+    font-size: 14px;
+    line-height: 1.7;
+    font-weight: 600;
+}
 
-        .recommendation-box {
-            background-color: #ECFDF5;
-            border-left: 6px solid #10B981;
-            padding: 18px;
-            border-radius: 14px;
-            margin-bottom: 12px;
-            color: #064E3B;
-        }
+.sidebar-badge {
+    background: linear-gradient(135deg,#059669,#10B981);
+    padding: 15px;
+    border-radius: 16px;
+    text-align: center;
+    font-weight: 900;
+    font-size: 15px;
+    color: white !important;
+    box-shadow: 0 8px 25px rgba(16,185,129,0.25);
+    margin: 18px 0;
+}
 
-        div[data-testid="stMetric"] {
-            background-color: white;
-            padding: 18px;
-            border-radius: 18px;
-            box-shadow: 0 4px 16px rgba(15, 23, 42, 0.07);
-            border: 1px solid #E5E7EB;
-        }
+.sidebar-note-box {
+    background: rgba(14,165,233,0.13);
+    border: 1px solid rgba(56,189,248,0.28);
+    border-radius: 16px;
+    padding: 14px;
+    color: #E0F2FE !important;
+    line-height: 1.7;
+    font-weight: 650;
+    margin-top: 16px;
+}
 
-        div[data-testid="stMetricLabel"] {
-            color: #64748B;
-            font-weight: 600;
-        }
+section[data-testid="stSidebar"] label {
+    color: #E0F2FE !important;
+    font-size: 14px !important;
+    font-weight: 800 !important;
+}
 
-        div[data-testid="stMetricValue"] {
-            color: #0F172A;
-            font-weight: 800;
-        }
+section[data-testid="stSidebar"] p,
+section[data-testid="stSidebar"] li {
+    color: #D6E4FF !important;
+    font-size: 14px !important;
+    line-height: 1.7 !important;
+    font-weight: 600 !important;
+}
 
-        .modern-card {
-            background-color: white;
-            padding: 20px;
-            border-radius: 18px;
-            border: 1px solid #E5E7EB;
-            box-shadow: 0 6px 20px rgba(15, 23, 42, 0.06);
-            min-height: 150px;
-        }
+section[data-testid="stSidebar"] .stSelectbox {
+    margin-bottom: 16px !important;
+}
 
-        .modern-card-title {
-            font-size: 15px;
-            font-weight: 700;
-            color: #64748B;
-            margin-bottom: 8px;
-        }
+.streamlit-expanderHeader {
+    background: rgba(15,23,42,0.82) !important;
+    border: 1px solid rgba(125,211,252,0.22) !important;
+    border-radius: 14px !important;
+    padding: 12px !important;
+    color: #FFFFFF !important;
+    font-size: 14px !important;
+    font-weight: 850 !important;
+}
 
-        .modern-card-value {
-            font-size: 26px;
-            font-weight: 800;
-            color: #0F172A;
-            margin-bottom: 8px;
-        }
+.streamlit-expanderHeader:hover {
+    border-color: #38BDF8 !important;
+    background: rgba(30,64,175,0.28) !important;
+}
 
-        .modern-card-note {
-            font-size: 14px;
-            color: #475569;
-            line-height: 1.5;
-        }
+.streamlit-expanderContent {
+    color: #D6E4FF !important;
+    font-size: 14px !important;
+}
 
-        .risk-high {
-            background-color: #FEF2F2;
-            border: 1px solid #FCA5A5;
-            color: #7F1D1D;
-        }
+/* =========================
+   MAIN CARDS
+========================= */
+.hero-card {
+    background:
+        linear-gradient(135deg, rgba(15,23,42,0.96), rgba(29,78,216,0.92)),
+        radial-gradient(circle at top right, rgba(56,189,248,0.45), transparent 35%);
+    padding: 46px;
+    border-radius: 32px;
+    color: white;
+    box-shadow: 0px 20px 55px rgba(37,99,235,0.35);
+    border: 1px solid rgba(147,197,253,0.30);
+    margin-bottom: 32px;
+}
 
-        .risk-medium {
-            background-color: #FFFBEB;
-            border: 1px solid #FCD34D;
-            color: #78350F;
-        }
+.hero-title {
+    font-size: 48px;
+    font-weight: 900;
+    color: #FFFFFF;
+}
 
-        .risk-low {
-            background-color: #ECFDF5;
-            border: 1px solid #86EFAC;
-            color: #064E3B;
-        }
-    </style>
-    """,
-    unsafe_allow_html=True
-)
+.hero-subtitle {
+    font-size: 19px;
+    color: #DBEAFE;
+    line-height: 1.8;
+}
 
+.section-title {
+    font-size: 30px;
+    font-weight: 900;
+    color: #FFFFFF;
+    margin-top: 34px;
+    margin-bottom: 18px;
+}
 
-# ==========================================
-# Load Data
-# ==========================================
+.kpi-card, .insight-grid-card, .data-section, .predictor-card {
+    background: rgba(15,23,42,0.88);
+    border: 1px solid rgba(148,163,184,0.28);
+    border-radius: 24px;
+    box-shadow: 0 16px 40px rgba(2,6,23,0.45);
+    backdrop-filter: blur(14px);
+}
 
-DATA_PATH = "Customer_Churn.csv"
-df = pd.read_csv(DATA_PATH)
+.kpi-card {
+    padding: 26px;
+}
 
-# ==========================================
-# PDF Report Generator
-# ==========================================
+.kpi-label {
+    color: #93C5FD;
+    font-size: 15px;
+    font-weight: 800;
+}
 
-def create_pdf_report():
+.kpi-value {
+    color: #FFFFFF;
+    font-size: 38px;
+    font-weight: 900;
+}
 
-    pdf_file = "customer_churn_report.pdf"
+.insight-grid-card {
+    padding: 26px;
+    min-height: 200px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
 
-    doc = SimpleDocTemplate(pdf_file)
+.insight-grid-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 20px 50px rgba(37,99,235,0.28);
+}
 
-    styles = getSampleStyleSheet()
+.insight-icon {
+    font-size: 34px;
+    margin-bottom: 14px;
+}
 
-    content = []
+.insight-title {
+    color: #7DD3FC;
+    font-size: 16px;
+    font-weight: 900;
+}
 
-    content.append(
-        Paragraph(
-            "Customer Retention Intelligence Report",
-            styles["Title"]
-        )
-    )
+.insight-value {
+    color: #FFFFFF;
+    font-size: 30px;
+    font-weight: 900;
+}
 
-    content.append(Spacer(1, 12))
+.insight-note, .data-note {
+    color: #CBD5E1;
+    font-size: 15px;
+    line-height: 1.7;
+}
 
-    content.append(
-        Paragraph(
-            f"Generated on: {datetime.now().strftime('%Y-%m-%d %H:%M')}",
-            styles["BodyText"]
-        )
-    )
+.recommendation-card {
+    background: rgba(6,78,59,0.42);
+    border: 1px solid rgba(52,211,153,0.45);
+    color: #D1FAE5;
+    padding: 22px;
+    border-radius: 22px;
+    margin-bottom: 14px;
+}
 
-    content.append(Spacer(1, 12))
+.prediction-card-high {
+    background: rgba(127,29,29,0.42);
+    border: 1px solid rgba(248,113,113,0.55);
+    color: #FEE2E2;
+    padding: 30px;
+    border-radius: 26px;
+}
 
-    content.append(
-        Paragraph(
-            f"Total Customers: {total_customers}",
-            styles["BodyText"]
-        )
-    )
+.prediction-card-low {
+    background: rgba(6,78,59,0.45);
+    border: 1px solid rgba(52,211,153,0.55);
+    color: #DCFCE7;
+    padding: 30px;
+    border-radius: 26px;
+}
 
-    content.append(
-        Paragraph(
-            f"Churn Rate: {churn_rate:.2f}%",
-            styles["BodyText"]
-        )
-    )
+.data-section {
+    padding: 28px;
+}
 
-    content.append(
-        Paragraph(
-            f"Retention Rate: {retention_rate:.2f}%",
-            styles["BodyText"]
-        )
-    )
+div[data-testid="stDataFrame"] {
+    border-radius: 20px;
+    overflow: hidden;
+    border: 1px solid rgba(125,211,252,0.25);
+}
 
-    content.append(Spacer(1, 12))
+/* =========================
+   PREDICTOR SECTION
+========================= */
+.predictor-card {
+    padding: 30px;
+    margin-bottom: 28px;
+}
 
-    content.append(
-        Paragraph(
-            "Key Business Insights",
-            styles["Heading2"]
-        )
-    )
+.predictor-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 26px;
+    gap: 20px;
+}
 
-    content.append(
-        Paragraph(
-            "- Month-to-month contracts show the highest churn risk.",
-            styles["BodyText"]
-        )
-    )
+.predictor-header h2 {
+    color: #FFFFFF;
+    font-size: 28px;
+    font-weight: 900;
+    margin-bottom: 6px;
+}
 
-    content.append(
-        Paragraph(
-            "- Customers with higher monthly charges churn more frequently.",
-            styles["BodyText"]
-        )
-    )
+.predictor-header p {
+    color: #CBD5E1;
+    font-size: 15px;
+    line-height: 1.6;
+    margin: 0;
+}
 
-    content.append(
-        Paragraph(
-            "- Long-tenure customers are significantly more loyal.",
-            styles["BodyText"]
-        )
-    )
+.predictor-badge {
+    background: linear-gradient(135deg, #2563EB, #06B6D4);
+    color: white;
+    padding: 12px 18px;
+    border-radius: 999px;
+    font-weight: 900;
+    white-space: nowrap;
+    box-shadow: 0 8px 25px rgba(14,165,233,0.25);
+}
 
-    doc.build(content)
+.form-group-title {
+    color: #38BDF8;
+    font-size: 18px;
+    font-weight: 900;
+    margin-bottom: 16px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid rgba(56,189,248,0.35);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+}
 
-    return pdf_file
-# ==========================================
-# Load Machine Learning Model
-# ==========================================
+/* =========================
+   PROFESSIONAL FORM FIELDS
+========================= */
+label {
+    color: #E2E8F0 !important;
+    font-size: 14px !important;
+    font-weight: 750 !important;
+}
 
-model = joblib.load("churn_model.pkl")
-model_columns = joblib.load("model_columns.pkl")
-# ==========================================
-# Sidebar Filters
-# ==========================================
+/* Select containers */
+div[data-baseweb="select"] > div {
+    background: #F8FAFC !important;
+    border: 1px solid #CBD5E1 !important;
+    border-radius: 14px !important;
+    min-height: 42px !important;
+    box-shadow: 0 3px 10px rgba(2,6,23,0.18) !important;
+}
 
-st.sidebar.title("Filters")
-st.sidebar.caption("Refine the customer segment shown in the dashboard.")
+/* Selected text */
+div[data-baseweb="select"] span,
+div[data-baseweb="select"] div {
+    color: #0F172A !important;
+    font-weight: 750 !important;
+    font-size: 15px !important;
+}
 
-selected_contract = st.sidebar.selectbox(
-    "Contract Type",
-    ["All"] + sorted(df["Contract"].unique().tolist())
-)
+/* Number input */
+.stNumberInput input,
+input {
+    background: #F8FAFC !important;
+    color: #0F172A !important;
+    font-weight: 750 !important;
+    font-size: 15px !important;
+    border: 1px solid #CBD5E1 !important;
+    border-radius: 14px !important;
+    box-shadow: 0 3px 10px rgba(2,6,23,0.18) !important;
+}
 
-selected_churn = st.sidebar.selectbox(
-    "Churn Status",
-    ["All", "Yes", "No"]
-)
+/* Dropdown menu */
+div[data-baseweb="popover"],
+div[data-baseweb="menu"],
+ul[role="listbox"] {
+    background: #FFFFFF !important;
+    border-radius: 14px !important;
+    border: 1px solid #CBD5E1 !important;
+    box-shadow: 0 16px 38px rgba(15,23,42,0.22) !important;
+}
 
-selected_internet = st.sidebar.selectbox(
-    "Internet Service",
-    ["All"] + sorted(df["InternetService"].unique().tolist())
-)
+/* Dropdown options */
+div[role="option"],
+li[role="option"] {
+    background: #FFFFFF !important;
+    color: #0F172A !important;
+    font-size: 15px !important;
+    font-weight: 750 !important;
+}
 
-filtered_df = df.copy()
+div[role="option"] span,
+li[role="option"] span {
+    color: #0F172A !important;
+    font-size: 15px !important;
+    font-weight: 750 !important;
+}
 
-if selected_contract != "All":
-    filtered_df = filtered_df[
-        filtered_df["Contract"] == selected_contract
-    ]
+/* Hover / focus option */
+div[role="option"]:hover,
+li[role="option"]:hover,
+div[aria-selected="true"] {
+    background: #DBEAFE !important;
+    color: #0F172A !important;
+}
 
-if selected_churn != "All":
-    filtered_df = filtered_df[
-        filtered_df["Churn"] == selected_churn
-    ]
+.stDownloadButton > button,
+.stButton > button,
+button[kind="formSubmit"] {
+    background: linear-gradient(135deg, #0EA5E9, #2563EB, #7C3AED) !important;
+    color: #FFFFFF !important;
+    border: none !important;
+    border-radius: 16px !important;
+    padding: 0.85rem 1.4rem !important;
+    font-size: 16px !important;
+    font-weight: 900 !important;
+    box-shadow: 0 12px 30px rgba(37,99,235,0.35) !important;
+    margin-top: 14px !important;
+}
 
-if selected_internet != "All":
-    filtered_df = filtered_df[
-        filtered_df["InternetService"] == selected_internet
-    ]
+button[kind="formSubmit"]:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 16px 38px rgba(14,165,233,0.45) !important;
+}
 
+.footer {
+    text-align: center;
+    color: #94A3B8;
+    font-size: 14px;
+    padding: 32px;
+}
+/* Fix AI Predictor submit button */
+div[data-testid="stForm"] div[data-testid="stFormSubmitButton"] button {
+    background: linear-gradient(135deg, #06B6D4, #2563EB, #7C3AED) !important;
+    color: #FFFFFF !important;
+    border: none !important;
+    border-radius: 14px !important;
+    padding: 12px 28px !important;
+    font-size: 15px !important;
+    font-weight: 900 !important;
+    opacity: 1 !important;
+    box-shadow: 0 12px 30px rgba(37,99,235,0.45) !important;
+}
 
-# ==========================================
-# Header / Hero Section
-# ==========================================
+div[data-testid="stForm"] div[data-testid="stFormSubmitButton"] button p {
+    color: #FFFFFF !important;
+    font-weight: 900 !important;
+}
 
-st.markdown(
-    """
-    <div class="hero-card">
-        <div class="hero-title">Customer Retention Intelligence Platform 📊</div>
-        <div class="hero-subtitle">
-            A business-focused analytics dashboard for understanding customer churn,
-            identifying high-risk segments, and supporting retention decisions with data-driven insights.
+div[data-testid="stForm"] div[data-testid="stFormSubmitButton"] button:hover {
+    background: linear-gradient(135deg, #22D3EE, #3B82F6, #8B5CF6) !important;
+    transform: translateY(-2px);
+}
+</style>
+""", unsafe_allow_html=True)
+# =========================
+# Load Data & Model
+# =========================
+
+@st.cache_data
+def load_data():
+    df = pd.read_csv("Customer_Churn.csv")
+    df["TotalCharges"] = pd.to_numeric(df["TotalCharges"], errors="coerce")
+    df["TotalCharges"] = df["TotalCharges"].fillna(df["TotalCharges"].median())
+    return df
+
+@st.cache_resource
+def load_model():
+    model = joblib.load("churn_model.pkl")
+    model_columns = joblib.load("model_columns.pkl")
+    return model, model_columns
+
+df = load_data()
+model, model_columns = load_model()
+
+# =========================
+# Sidebar
+# =========================
+with st.sidebar:
+    st.markdown("""
+    <div class="sidebar-hero">
+        <div class="sidebar-title">💼 Retention AI</div>
+        <div class="sidebar-subtitle">
+            Customer churn intelligence workspace for retention analytics and AI-powered decision support.
         </div>
     </div>
-    """,
-    unsafe_allow_html=True
-)
+    """, unsafe_allow_html=True)
 
-st.caption(
-    f"Current filters → Contract: {selected_contract} | Churn: {selected_churn} | Internet Service: {selected_internet}"
-)
-
-
-# ==========================================
-# KPI Dashboard
-# ==========================================
-
-st.markdown('<div class="section-title">Executive KPIs</div>', unsafe_allow_html=True)
-
-total_customers = len(filtered_df)
-churned_customers = len(filtered_df[filtered_df["Churn"] == "Yes"])
-retained_customers = len(filtered_df[filtered_df["Churn"] == "No"])
-
-if total_customers > 0:
-    churn_rate = (churned_customers / total_customers) * 100
-    retention_rate = (retained_customers / total_customers) * 100
-    avg_monthly_charges = filtered_df["MonthlyCharges"].mean()
-else:
-    churn_rate = 0
-    retention_rate = 0
-    avg_monthly_charges = 0
-
-col1, col2, col3, col4 = st.columns(4)
-
-with col1:
-    st.metric("Total Customers", f"{total_customers:,}")
-
-with col2:
-    st.metric("Churned Customers", f"{churned_customers:,}")
-
-with col3:
-    st.metric("Churn Rate", f"{churn_rate:.1f}%")
-
-with col4:
-    st.metric("Avg Monthly Charges", f"${avg_monthly_charges:.2f}")
-
-
-# ==========================================
-# Executive Summary
-# ==========================================
-
-st.markdown('<div class="section-title">Executive Summary</div>', unsafe_allow_html=True)
-
-if not filtered_df.empty:
-    highest_churn_contract = (
-        pd.crosstab(df["Contract"], df["Churn"], normalize="index")["Yes"]
-        .sort_values(ascending=False)
-        .index[0]
+    selected_contract = st.selectbox(
+        "Contract Type",
+        ["All"] + sorted(df["Contract"].unique().tolist())
     )
 
-    churn_avg_charge = df[df["Churn"] == "Yes"]["MonthlyCharges"].mean()
-    retained_avg_charge = df[df["Churn"] == "No"]["MonthlyCharges"].mean()
-
-    churn_avg_tenure = df[df["Churn"] == "Yes"]["tenure"].mean()
-    retained_avg_tenure = df[df["Churn"] == "No"]["tenure"].mean()
-
-    st.markdown(
-        f"""
-        <div class="insight-box">
-            <b>Key Finding:</b> The strongest churn risk appears among customers with
-            <b>{highest_churn_contract}</b> contracts. Customers who churn also show higher average monthly charges
-            (${churn_avg_charge:.2f}) than retained customers (${retained_avg_charge:.2f}).
-        </div>
-        <div class="insight-box">
-            <b>Tenure Insight:</b> Churned customers have a shorter average tenure
-            ({churn_avg_tenure:.1f} months) compared with retained customers
-            ({retained_avg_tenure:.1f} months).
-        </div>
-        """,
-        unsafe_allow_html=True
+    selected_churn = st.selectbox(
+        "Churn Status",
+        ["All", "Yes", "No"]
     )
-else:
-    st.warning("No data available for the selected filters.")
 
+    selected_internet = st.selectbox(
+        "Internet Service",
+        ["All"] + sorted(df["InternetService"].unique().tolist())
+    )
 
+    st.markdown("""
+    <div class="sidebar-badge">
+        🤖 AI Churn Predictor Enabled
+    </div>
+    """, unsafe_allow_html=True)
 
+    with st.expander("📌 Platform Modules"):
+        st.markdown("""
+        - Executive KPIs  
+        - Churn Analytics  
+        - Risk Segmentation  
+        - AI Prediction  
+        - Customer Records
+        """)
 
-# ==========================================
-# AI Business Insights
-# ==========================================
+    with st.expander("🧰 Technologies"):
+        st.markdown("""
+        - Python  
+        - Pandas  
+        - Scikit-Learn  
+        - Streamlit  
+        - Plotly  
+        - Power BI
+        """)
 
-st.markdown('<div class="section-title">AI Business Insights</div>', unsafe_allow_html=True)
+    st.markdown("""
+    <div class="sidebar-note-box">
+        Built for retention analysis, churn prediction, and executive decision support.
+    </div>
+    """, unsafe_allow_html=True)
 
-overall_churn_rate = (df["Churn"].eq("Yes").mean()) * 100
-contract_risk = pd.crosstab(
+# =========================
+# Calculations
+# =========================
+
+total_customers = len(df)
+churned_customers = len(df[df["Churn"] == "Yes"])
+retained_customers = len(df[df["Churn"] == "No"])
+
+churn_rate = (churned_customers / total_customers) * 100 if total_customers else 0
+retention_rate = (retained_customers / total_customers) * 100 if total_customers else 0
+avg_monthly_charges = df["MonthlyCharges"].mean() if total_customers else 0
+
+overall_churn_rate = df["Churn"].eq("Yes").mean() * 100
+
+contract_churn_rate = pd.crosstab(
     df["Contract"],
     df["Churn"],
     normalize="index"
 )
 
-if "Yes" in contract_risk.columns:
-    riskiest_contract = contract_risk["Yes"].sort_values(ascending=False).index[0]
-    riskiest_contract_rate = contract_risk["Yes"].max() * 100
+if "Yes" in contract_churn_rate.columns:
+    riskiest_contract = contract_churn_rate["Yes"].sort_values(ascending=False).index[0]
+    riskiest_rate = contract_churn_rate["Yes"].max() * 100
 else:
     riskiest_contract = "N/A"
-    riskiest_contract_rate = 0
+    riskiest_rate = 0
 
 churn_avg_charge = df[df["Churn"] == "Yes"]["MonthlyCharges"].mean()
+retained_avg_charge = df[df["Churn"] == "No"]["MonthlyCharges"].mean()
 churn_avg_tenure = df[df["Churn"] == "Yes"]["tenure"].mean()
+retained_avg_tenure = df[df["Churn"] == "No"]["tenure"].mean()
 
-insight_col1, insight_col2, insight_col3, insight_col4 = st.columns(4)
+# =========================
+# Hero
+# =========================
 
-with insight_col1:
-    st.markdown(
-        f'''
-        <div class="modern-card">
-            <div class="modern-card-title">Overall Churn Rate</div>
-            <div class="modern-card-value">{overall_churn_rate:.1f}%</div>
-            <div class="modern-card-note">Percentage of customers who left the company.</div>
+st.markdown("""
+<div class="hero-card">
+    <div class="hero-title">Customer Retention Intelligence</div>
+    <div class="hero-subtitle">
+        Monitor churn behavior, detect high-risk customer groups, and generate AI-powered retention recommendations through a modern dark analytics workspace.
+    </div>
+</div>
+""", unsafe_allow_html=True)
+
+st.markdown("""
+<div style='color:#CBD5E1;
+font-size:15px;
+line-height:1.8;
+margin-bottom:10px;'>
+
+Advanced analytics workspace for customer retention,
+churn prediction, and executive decision support.
+
+</div>
+""", unsafe_allow_html=True)
+
+# =========================
+# KPIs
+# =========================
+
+st.markdown('<div class="section-title">Executive KPIs</div>', unsafe_allow_html=True)
+
+k1, k2, k3, k4 = st.columns(4)
+
+with k1:
+    st.markdown(f"""
+    <div class="kpi-card">
+        <div class="kpi-label">Total Customers</div>
+        <div class="kpi-value">{total_customers:,}</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+with k2:
+    st.markdown(f"""
+    <div class="kpi-card">
+        <div class="kpi-label">Churned Customers</div>
+        <div class="kpi-value">{churned_customers:,}</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+with k3:
+    st.markdown(f"""
+    <div class="kpi-card">
+        <div class="kpi-label">Churn Rate</div>
+        <div class="kpi-value">{churn_rate:.1f}%</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+with k4:
+    st.markdown(f"""
+    <div class="kpi-card">
+        <div class="kpi-label">Avg Monthly Charges</div>
+        <div class="kpi-value">${avg_monthly_charges:.2f}</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+# =========================
+# Executive Intelligence Cards
+# =========================
+
+st.markdown('<div class="section-title">Executive Intelligence</div>', unsafe_allow_html=True)
+
+i1, i2, i3, i4 = st.columns(4)
+
+with i1:
+    st.markdown(f"""
+    <div class="insight-grid-card">
+        <div class="insight-icon">📉</div>
+        <div class="insight-title">Overall Churn Rate</div>
+        <div class="insight-value">{overall_churn_rate:.1f}%</div>
+        <div class="insight-note">
+            Percentage of customers who left the service across the full dataset.
         </div>
-        ''',
-        unsafe_allow_html=True
-    )
+    </div>
+    """, unsafe_allow_html=True)
 
-with insight_col2:
-    st.markdown(
-        f'''
-        <div class="modern-card">
-            <div class="modern-card-title">Highest Risk Segment</div>
-            <div class="modern-card-value">{riskiest_contract}</div>
-            <div class="modern-card-note">Churn rate: {riskiest_contract_rate:.1f}%</div>
+with i2:
+    st.markdown(f"""
+    <div class="insight-grid-card">
+        <div class="insight-icon">⚠️</div>
+        <div class="insight-title">Highest Risk Segment</div>
+        <div class="insight-value">{riskiest_contract}</div>
+        <div class="insight-note">
+            This contract group records the highest churn rate at {riskiest_rate:.1f}%.
         </div>
-        ''',
-        unsafe_allow_html=True
-    )
+    </div>
+    """, unsafe_allow_html=True)
 
-with insight_col3:
-    st.markdown(
-        f'''
-        <div class="modern-card">
-            <div class="modern-card-title">Avg Churn Charges</div>
-            <div class="modern-card-value">${churn_avg_charge:.2f}</div>
-            <div class="modern-card-note">Average monthly bill among churned customers.</div>
+with i3:
+    st.markdown(f"""
+    <div class="insight-grid-card">
+        <div class="insight-icon">💳</div>
+        <div class="insight-title">Churn Billing Signal</div>
+        <div class="insight-value">${churn_avg_charge:.2f}</div>
+        <div class="insight-note">
+            Average monthly charge among churned customers compared with ${retained_avg_charge:.2f} for retained customers.
         </div>
-        ''',
-        unsafe_allow_html=True
-    )
+    </div>
+    """, unsafe_allow_html=True)
 
-with insight_col4:
-    st.markdown(
-        f'''
-        <div class="modern-card">
-            <div class="modern-card-title">Avg Churn Tenure</div>
-            <div class="modern-card-value">{churn_avg_tenure:.1f}</div>
-            <div class="modern-card-note">Average months before churn occurs.</div>
+with i4:
+    st.markdown(f"""
+    <div class="insight-grid-card">
+        <div class="insight-icon">⏳</div>
+        <div class="insight-title">Tenure Signal</div>
+        <div class="insight-value">{churn_avg_tenure:.1f} mo</div>
+        <div class="insight-note">
+            Average tenure for churned customers versus {retained_avg_tenure:.1f} months for retained customers.
         </div>
-        ''',
-        unsafe_allow_html=True
-    )
+    </div>
+    """, unsafe_allow_html=True)
 
-# ==========================================
+# =========================
 # Charts
-# ==========================================
+# =========================
 
 st.markdown('<div class="section-title">Churn Analytics</div>', unsafe_allow_html=True)
 
-chart_col1, chart_col2 = st.columns(2)
+plotly_template = "plotly_dark"
 
-with chart_col1:
-    st.subheader("Churn Distribution")
+c1, c2 = st.columns(2)
 
-    churn_counts = filtered_df["Churn"].value_counts()
+with c1:
+    churn_counts =df["Churn"].value_counts().reset_index()
+    churn_counts.columns = ["Churn", "Customers"]
 
-    if not churn_counts.empty:
-        fig, ax = plt.subplots(figsize=(5, 5))
-        ax.pie(
-            churn_counts,
-            labels=churn_counts.index,
-            autopct="%1.1f%%",
-            startangle=90
-        )
-        ax.axis("equal")
-        st.pyplot(fig)
-    else:
-        st.info("No churn data available for the selected filters.")
+    fig = px.pie(
+        churn_counts,
+        values="Customers",
+        names="Churn",
+        hole=0.58,
+        title="Churn Distribution",
+        template=plotly_template
+    )
+    fig.update_layout(
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+        font_color="#E5E7EB"
+    )
+    st.plotly_chart(fig, use_container_width=True)
 
-with chart_col2:
-    st.subheader("Churn by Contract Type")
-
+with c2:
     contract_churn = pd.crosstab(
-        filtered_df["Contract"],
-        filtered_df["Churn"]
+        df["Contract"],
+        df["Churn"]
+    ).reset_index()
+
+    fig = px.bar(
+        contract_churn,
+        x="Contract",
+        y=[col for col in contract_churn.columns if col != "Contract"],
+        barmode="group",
+        title="Churn by Contract Type",
+        template=plotly_template
     )
+    fig.update_layout(
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+        font_color="#E5E7EB"
+    )
+    st.plotly_chart(fig, use_container_width=True)
 
-    if not contract_churn.empty:
-        st.bar_chart(contract_churn)
-    else:
-        st.info("No contract data available for the selected filters.")
+c3, c4 = st.columns(2)
 
-
-chart_col3, chart_col4 = st.columns(2)
-
-with chart_col3:
-    st.subheader("Average Monthly Charges by Churn")
-
-    monthly_charges = (
-        filtered_df.groupby("Churn")["MonthlyCharges"]
+with c3:
+    charge_df = (
+        df.groupby("Churn")["MonthlyCharges"]
         .mean()
+        .reset_index()
     )
 
-    if not monthly_charges.empty:
-        st.bar_chart(monthly_charges)
-    else:
-        st.info("No monthly charges data available.")
+    fig = px.bar(
+        charge_df,
+        x="Churn",
+        y="MonthlyCharges",
+        title="Average Monthly Charges by Churn",
+        template=plotly_template
+    )
+    fig.update_layout(
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+        font_color="#E5E7EB"
+    )
+    st.plotly_chart(fig, use_container_width=True)
 
-with chart_col4:
-    st.subheader("Average Tenure by Churn")
-
-    tenure_analysis = (
-        filtered_df.groupby("Churn")["tenure"]
+with c4:
+    tenure_df = (
+        df.groupby("Churn")["tenure"]
         .mean()
+        .reset_index()
     )
 
-    if not tenure_analysis.empty:
-        st.bar_chart(tenure_analysis)
-    else:
-        st.info("No tenure data available.")
+    fig = px.bar(
+        tenure_df,
+        x="Churn",
+        y="tenure",
+        title="Average Tenure by Churn",
+        template=plotly_template
+    )
+    fig.update_layout(
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+        font_color="#E5E7EB"
+    )
+    st.plotly_chart(fig, use_container_width=True)
 
-
-
-
-# ==========================================
+# =========================
 # Risk Segmentation
-# ==========================================
+# =========================
 
-st.markdown('<div class="section-title">Risk Segmentation</div>', unsafe_allow_html=True)
+st.markdown('<div class="section-title">Customer Risk Segmentation</div>', unsafe_allow_html=True)
 
-if not filtered_df.empty:
-    high_risk_mask = (
-        (filtered_df["Contract"] == "Month-to-month")
-        & (filtered_df["tenure"] < 18)
-        & (filtered_df["MonthlyCharges"] > df["MonthlyCharges"].mean())
+high_risk = (
+    (df["Contract"] == "Month-to-month")
+    & (df["tenure"] < 18)
+    & (df["MonthlyCharges"] > df["MonthlyCharges"].mean())
+)
+
+medium_risk = (
+    (~high_risk)
+    & (
+        (df["Contract"] == "Month-to-month")
+        | (df["tenure"] < 18)
+        | (df["MonthlyCharges"] > df["MonthlyCharges"].mean())
     )
+)
 
-    medium_risk_mask = (
-        (~high_risk_mask)
-        & (
-            (filtered_df["Contract"] == "Month-to-month")
-            | (filtered_df["tenure"] < 18)
-            | (filtered_df["MonthlyCharges"] > df["MonthlyCharges"].mean())
-        )
-    )
+low_risk = ~(high_risk | medium_risk)
 
-    low_risk_mask = ~(high_risk_mask | medium_risk_mask)
+r1, r2, r3 = st.columns(3)
 
-    high_risk_count = int(high_risk_mask.sum())
-    medium_risk_count = int(medium_risk_mask.sum())
-    low_risk_count = int(low_risk_mask.sum())
+with r1:
+    st.markdown(f"""
+    <div class="kpi-card">
+        <div class="kpi-label">High Risk Customers</div>
+        <div class="kpi-value">{high_risk.sum():,}</div>
+    </div>
+    """, unsafe_allow_html=True)
 
-    risk_col1, risk_col2, risk_col3 = st.columns(3)
+with r2:
+    st.markdown(f"""
+    <div class="kpi-card">
+        <div class="kpi-label">Medium Risk Customers</div>
+        <div class="kpi-value">{medium_risk.sum():,}</div>
+    </div>
+    """, unsafe_allow_html=True)
 
-    with risk_col1:
-        st.markdown(
-            f'''
-            <div class="modern-card risk-high">
-                <div class="modern-card-title">High Risk</div>
-                <div class="modern-card-value">{high_risk_count:,}</div>
-                <div class="modern-card-note">Month-to-month, low tenure, and high charges.</div>
-            </div>
-            ''',
-            unsafe_allow_html=True
-        )
+with r3:
+    st.markdown(f"""
+    <div class="kpi-card">
+        <div class="kpi-label">Low Risk Customers</div>
+        <div class="kpi-value">{low_risk.sum():,}</div>
+    </div>
+    """, unsafe_allow_html=True)
 
-    with risk_col2:
-        st.markdown(
-            f'''
-            <div class="modern-card risk-medium">
-                <div class="modern-card-title">Medium Risk</div>
-                <div class="modern-card-value">{medium_risk_count:,}</div>
-                <div class="modern-card-note">Customers with one or more churn risk signals.</div>
-            </div>
-            ''',
-            unsafe_allow_html=True
-        )
+risk_df = pd.DataFrame({
+    "Risk Segment": ["High Risk", "Medium Risk", "Low Risk"],
+    "Customers": [high_risk.sum(), medium_risk.sum(), low_risk.sum()]
+})
 
-    with risk_col3:
-        st.markdown(
-            f'''
-            <div class="modern-card risk-low">
-                <div class="modern-card-title">Low Risk</div>
-                <div class="modern-card-value">{low_risk_count:,}</div>
-                <div class="modern-card-note">Customers with stronger retention signals.</div>
-            </div>
-            ''',
-            unsafe_allow_html=True
-        )
+fig = px.bar(
+    risk_df,
+    x="Risk Segment",
+    y="Customers",
+    title="Risk Segment Distribution",
+    template=plotly_template
+)
+fig.update_layout(
+    paper_bgcolor="rgba(0,0,0,0)",
+    plot_bgcolor="rgba(0,0,0,0)",
+    font_color="#E5E7EB"
+)
+st.plotly_chart(fig, use_container_width=True)
 
-    risk_segment_df = pd.DataFrame(
-        {
-            "Risk Segment": ["High Risk", "Medium Risk", "Low Risk"],
-            "Customers": [high_risk_count, medium_risk_count, low_risk_count]
-        }
-    ).set_index("Risk Segment")
-
-    st.bar_chart(risk_segment_df)
-else:
-    st.info("No customer data available for risk segmentation.")
-
-
-# ==========================================
-# Model Explainability
-# ==========================================
+# =========================
+# Model Drivers
+# =========================
 
 st.markdown('<div class="section-title">Top Model Drivers</div>', unsafe_allow_html=True)
 
 if hasattr(model, "feature_importances_"):
-    feature_importance = pd.DataFrame(
-        {
-            "Feature": model_columns,
-            "Importance": model.feature_importances_
-        }
-    )
+    feature_importance = pd.DataFrame({
+        "Feature": model_columns,
+        "Importance": model.feature_importances_
+    })
 
     feature_importance["Feature"] = (
         feature_importance["Feature"]
         .str.replace("_Yes", "", regex=False)
         .str.replace("_No", "", regex=False)
-        .str.replace("_Fiber optic", " - Fiber optic", regex=False)
         .str.replace("_Month-to-month", " - Month-to-month", regex=False)
         .str.replace("_One year", " - One year", regex=False)
         .str.replace("_Two year", " - Two year", regex=False)
+        .str.replace("_Fiber optic", " - Fiber optic", regex=False)
     )
 
     top_features = (
         feature_importance
         .sort_values("Importance", ascending=False)
         .head(10)
-        .set_index("Feature")
     )
 
-    st.write(
-        "These are the strongest signals the model uses when estimating churn risk."
+    fig = px.bar(
+        top_features,
+        x="Importance",
+        y="Feature",
+        orientation="h",
+        title="Top Churn Prediction Drivers",
+        template=plotly_template
     )
-
-    st.bar_chart(top_features)
-else:
-    st.info("Feature importance is not available for this model type.")
-
-# ==========================================
-# AI-Style Recommendations
-# ==========================================
-
-st.markdown('<div class="section-title">Retention Recommendations</div>', unsafe_allow_html=True)
-
-st.markdown(
-    """
-    <div class="recommendation-box">
-        <b>1. Prioritize month-to-month customers:</b> Create retention offers for customers with flexible contracts.
-    </div>
-    <div class="recommendation-box">
-        <b>2. Review high monthly charges:</b> Customers with higher bills show stronger churn risk.
-    </div>
-    <div class="recommendation-box">
-        <b>3. Focus on early lifecycle customers:</b> Short-tenure customers need onboarding support and loyalty incentives.
-    </div>
-    """,
-    unsafe_allow_html=True
-)
-
-
-# ==========================================
-# Data Table
-# ==========================================
-
-st.markdown('<div class="section-title">Customer Data</div>', unsafe_allow_html=True)
-
-st.dataframe(
-    filtered_df,
-    width="stretch"
-)
-
-csv = filtered_df.to_csv(index=False)
-
-st.download_button(
-    label="Download Filtered Data CSV",
-    data=csv,
-    file_name="filtered_customer_churn_data.csv",
-    mime="text/csv"
-)
-# ==========================================
-# Executive Report Center
-# ==========================================
-
-st.markdown("---")
-st.markdown('<div class="section-title">Executive Report Center</div>', unsafe_allow_html=True)
-
-report_col1, report_col2 = st.columns([2, 1])
-
-with report_col1:
-    st.markdown(
-        """
-        <div class="insight-box">
-            <b>Executive Report:</b> Generate a PDF summary that includes core KPIs,
-            churn insights, and recommended retention actions for the selected dashboard view.
-        </div>
-        """,
-        unsafe_allow_html=True
+    fig.update_layout(
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+        font_color="#E5E7EB"
     )
+    st.plotly_chart(fig, use_container_width=True)
 
-with report_col2:
-    if st.button("Generate Executive PDF"):
+# =========================
+# Recommendations
+# =========================
 
-        pdf_file = create_pdf_report()
+st.markdown('<div class="section-title">Retention Strategy Recommendations</div>', unsafe_allow_html=True)
 
-        with open(pdf_file, "rb") as file:
+st.markdown("""
+<div class="recommendation-card">
+<b>1. Prioritize month-to-month customers:</b> Offer loyalty discounts, upgrade incentives, or annual-contract benefits.
+</div>
 
-            st.download_button(
-                label="Download Executive PDF",
-                data=file,
-                file_name="Customer_Churn_Executive_Report.pdf",
-                mime="application/pdf"
-            )
+<div class="recommendation-card">
+<b>2. Review high monthly charges:</b> Customers with higher bills show stronger churn risk and may need pricing review.
+</div>
 
-# ==========================================
-# About The Model
-# ==========================================
+<div class="recommendation-card">
+<b>3. Support early lifecycle customers:</b> Short-tenure customers need onboarding, engagement, and proactive support.
+</div>
+""", unsafe_allow_html=True)
 
-st.markdown('<div class="section-title">About the Model</div>', unsafe_allow_html=True)
 
-model_col1, model_col2, model_col3 = st.columns(3)
 
-with model_col1:
-    st.markdown(
-        """
-        <div class="modern-card">
-            <div class="modern-card-title">Model Type</div>
-            <div class="modern-card-value">Random Forest</div>
-            <div class="modern-card-note">A classification model used to estimate customer churn risk.</div>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
+# =========================
+# AI Prediction
+# =========================
 
-with model_col2:
-    st.markdown(
-        """
-        <div class="modern-card">
-            <div class="modern-card-title">Business Goal</div>
-            <div class="modern-card-value">Retention</div>
-            <div class="modern-card-note">Identify customers who may leave and support proactive retention actions.</div>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
-
-with model_col3:
-    st.markdown(
-        """
-        <div class="modern-card">
-            <div class="modern-card-title">Output</div>
-            <div class="modern-card-value">Risk Score</div>
-            <div class="modern-card-note">A probability-based churn risk score from 0% to 100%.</div>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
-# ==========================================
-# AI Churn Prediction
-# ==========================================
-
-st.markdown("---")
 st.markdown('<div class="section-title">AI Churn Risk Predictor</div>', unsafe_allow_html=True)
 
-st.write(
-    "Estimate the likelihood of customer churn based on contract, tenure, charges, and service profile."
-)
-
-st.markdown(
-    """
-    <div style="
-        background-color:#F8FAFC;
-        padding:24px;
-        border-radius:18px;
-        border:1px solid #E5E7EB;
-        margin-bottom:20px;
-    ">
-        <h4 style="color:#0F172A; margin-bottom:6px;">Customer Profile</h4>
-        <p style="color:#64748B; margin-bottom:0;">
-            Fill in the customer details below to generate a churn risk prediction and recommended retention action.
-        </p>
+st.markdown("""
+<div class="predictor-card">
+    <div class="predictor-header">
+        <div>
+            <h2>Customer Churn Risk Assessment</h2>
+            <p>
+                Enter customer profile details to estimate churn probability and generate a retention recommendation.
+            </p>
+        </div>
+        <div class="predictor-badge">AI Model Active</div>
     </div>
-    """,
-    unsafe_allow_html=True
-)
+""", unsafe_allow_html=True)
 
 with st.form("churn_prediction_form"):
 
-    form_col1, form_col2, form_col3 = st.columns(3)
+    p1, p2, p3 = st.columns(3)
 
-    with form_col1:
-        gender = st.selectbox(
-            "Gender",
-            ["Female", "Male"]
-        )
+    with p1:
+        st.markdown('<div class="form-group-title">Customer Profile</div>', unsafe_allow_html=True)
 
-        senior_citizen = st.selectbox(
-            "Senior Citizen",
-            [0, 1]
-        )
+        gender = st.selectbox("Gender", ["Female", "Male"])
+        senior_citizen = st.selectbox("Senior Citizen", [0, 1])
+        partner = st.selectbox("Partner", ["No", "Yes"])
+        dependents = st.selectbox("Dependents", ["No", "Yes"])
 
-        partner = st.selectbox(
-            "Partner",
-            ["No", "Yes"]
-        )
+    with p2:
+        st.markdown('<div class="form-group-title">Contract & Billing</div>', unsafe_allow_html=True)
 
-        dependents = st.selectbox(
-            "Dependents",
-            ["No", "Yes"]
-        )
+        tenure = st.number_input("Tenure (Months)", min_value=0, max_value=100, value=12)
+        contract = st.selectbox("Contract Type", ["Month-to-month", "One year", "Two year"])
+        monthly_charges = st.number_input("Monthly Charges", min_value=0.0, value=70.0)
+        total_charges = st.number_input("Total Charges", min_value=0.0, value=800.0)
 
-    with form_col2:
-        tenure = st.number_input(
-            "Tenure (Months)",
-            min_value=0,
-            max_value=100,
-            value=12
-        )
+    with p3:
+        st.markdown('<div class="form-group-title">Service Profile</div>', unsafe_allow_html=True)
 
-        contract = st.selectbox(
-            "Contract Type",
-            ["Month-to-month", "One year", "Two year"]
-        )
+        internet_service = st.selectbox("Internet Service", ["DSL", "Fiber optic", "No"])
+        online_security = st.selectbox("Online Security", ["No", "Yes", "No internet service"])
+        tech_support = st.selectbox("Tech Support", ["No", "Yes", "No internet service"])
+        payment_method = st.selectbox("Payment Method", sorted(df["PaymentMethod"].unique().tolist()))
 
-        monthly_charges = st.number_input(
-            "Monthly Charges",
-            min_value=0.0,
-            value=70.0
-        )
+    submitted = st.form_submit_button("Run Churn Prediction")
 
-        total_charges = st.number_input(
-            "Total Charges",
-            min_value=0.0,
-            value=800.0
-        )
-
-    with form_col3:
-        internet_service = st.selectbox(
-            "Internet Service",
-            ["DSL", "Fiber optic", "No"]
-        )
-
-        online_security = st.selectbox(
-            "Online Security",
-            ["No", "Yes", "No internet service"]
-        )
-
-        tech_support = st.selectbox(
-            "Tech Support",
-            ["No", "Yes", "No internet service"]
-        )
-
-        payment_method = st.selectbox(
-            "Payment Method",
-            sorted(df["PaymentMethod"].unique().tolist())
-        )
-
-    submitted = st.form_submit_button(
-        "Predict Customer Churn Risk"
-    )
+st.markdown("</div>", unsafe_allow_html=True)
 
 if submitted:
+    input_data = pd.DataFrame({
+        "gender": [gender],
+        "SeniorCitizen": [senior_citizen],
+        "Partner": [partner],
+        "Dependents": [dependents],
+        "tenure": [tenure],
+        "PhoneService": ["Yes"],
+        "MultipleLines": ["No"],
+        "InternetService": [internet_service],
+        "OnlineSecurity": [online_security],
+        "OnlineBackup": ["No"],
+        "DeviceProtection": ["No"],
+        "TechSupport": [tech_support],
+        "StreamingTV": ["No"],
+        "StreamingMovies": ["No"],
+        "Contract": [contract],
+        "PaperlessBilling": ["Yes"],
+        "PaymentMethod": [payment_method],
+        "MonthlyCharges": [monthly_charges],
+        "TotalCharges": [total_charges],
+    })
 
-    input_data = pd.DataFrame(
-        {
-            "gender": [gender],
-            "SeniorCitizen": [senior_citizen],
-            "Partner": [partner],
-            "Dependents": [dependents],
-            "tenure": [tenure],
-            "PhoneService": ["Yes"],
-            "MultipleLines": ["No"],
-            "InternetService": [internet_service],
-            "OnlineSecurity": [online_security],
-            "OnlineBackup": ["No"],
-            "DeviceProtection": ["No"],
-            "TechSupport": [tech_support],
-            "StreamingTV": ["No"],
-            "StreamingMovies": ["No"],
-            "Contract": [contract],
-            "PaperlessBilling": ["Yes"],
-            "PaymentMethod": [payment_method],
-            "MonthlyCharges": [monthly_charges],
-            "TotalCharges": [total_charges],
-        }
-    )
-
-    input_encoded = pd.get_dummies(
-        input_data,
-        drop_first=True
-    )
-
-    input_encoded = input_encoded.reindex(
-        columns=model_columns,
-        fill_value=0
-    )
+    input_encoded = pd.get_dummies(input_data, drop_first=True)
+    input_encoded = input_encoded.reindex(columns=model_columns, fill_value=0)
 
     prediction = model.predict(input_encoded)[0]
     probability = model.predict_proba(input_encoded)[0][1]
     risk_score = probability * 100
 
-    st.markdown("### Prediction Result")
+    st.markdown('<div class="section-title">Prediction Result</div>', unsafe_allow_html=True)
 
     gauge_fig = go.Figure(
         go.Indicator(
@@ -929,104 +983,56 @@ if submitted:
             title={"text": "Churn Risk Score"},
             gauge={
                 "axis": {"range": [0, 100]},
-                "bar": {"color": "#2563EB"},
+                "bar": {"color": "#38BDF8"},
                 "steps": [
-                    {"range": [0, 40], "color": "#DCFCE7"},
-                    {"range": [40, 70], "color": "#FEF9C3"},
-                    {"range": [70, 100], "color": "#FEE2E2"},
+                    {"range": [0, 40], "color": "rgba(34,197,94,0.28)"},
+                    {"range": [40, 70], "color": "rgba(234,179,8,0.28)"},
+                    {"range": [70, 100], "color": "rgba(239,68,68,0.28)"},
                 ],
             },
         )
     )
-
-    st.plotly_chart(
-        gauge_fig,
-        width="stretch"
+    gauge_fig.update_layout(
+        paper_bgcolor="rgba(0,0,0,0)",
+        font_color="#E5E7EB"
     )
+
+    st.plotly_chart(gauge_fig, use_container_width=True)
 
     if prediction == 1:
+        st.markdown(f"""
+        <div class="prediction-card-high">
+            <h2>High Churn Risk</h2>
+            <h1>Risk Score: {risk_score:.1f}%</h1>
+            <p>This customer is likely to leave the service.</p>
+        </div>
+        """, unsafe_allow_html=True)
 
-        st.markdown(
-            f"""
-            <div style="
-                background-color:#FEF2F2;
-                padding:24px;
-                border-radius:18px;
-                border:1px solid #FCA5A5;
-            ">
-                <h3 style="color:#B91C1C; margin-bottom:8px;">High Churn Risk</h3>
-                <p style="font-size:18px;color:#7F1D1D; margin-bottom:10px;">
-                    This customer is likely to leave the service.
-                </p>
-                <h2 style="color:#B91C1C; margin-bottom:0;">Risk Score: {risk_score:.1f}%</h2>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
-
-        st.warning(
-            "Recommended action: offer retention incentives, review pricing, and encourage a longer-term contract."
-        )
+        recommendation = "Offer retention incentives, review pricing, and encourage a longer-term contract."
+        st.warning(recommendation)
 
     else:
+        st.markdown(f"""
+        <div class="prediction-card-low">
+            <h2>Low Churn Risk</h2>
+            <h1>Risk Score: {risk_score:.1f}%</h1>
+            <p>This customer is likely to stay with the service.</p>
+        </div>
+        """, unsafe_allow_html=True)
 
-        st.markdown(
-            f"""
-            <div style="
-                background-color:#ECFDF5;
-                padding:24px;
-                border-radius:18px;
-                border:1px solid #86EFAC;
-            ">
-                <h3 style="color:#047857; margin-bottom:8px;">Low Churn Risk</h3>
-                <p style="font-size:18px;color:#064E3B; margin-bottom:10px;">
-                    This customer is likely to stay with the service.
-                </p>
-                <h2 style="color:#047857; margin-bottom:0;">Risk Score: {risk_score:.1f}%</h2>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
+        recommendation = "Maintain engagement and continue monitoring customer satisfaction."
+        st.success(recommendation)
 
-        st.success(
-            "Recommended action: maintain engagement and continue monitoring customer satisfaction."
-        )
-
-    # ==========================================
-    # Download Prediction Report
-    # ==========================================
-
-    prediction_label = "High Churn Risk" if prediction == 1 else "Low Churn Risk"
-    recommended_action = (
-        "Offer retention incentives, review pricing, and encourage a longer-term contract."
-        if prediction == 1
-        else "Maintain engagement and continue monitoring customer satisfaction."
-    )
-
-    report_text = f'''
+    report_text = f"""
 Customer Retention Intelligence Platform
 Prediction Report
 
-Prediction Result: {prediction_label}
+Prediction Result: {"High Churn Risk" if prediction == 1 else "Low Churn Risk"}
 Risk Score: {risk_score:.1f}%
 
-Customer Profile
-- Gender: {gender}
-- Senior Citizen: {senior_citizen}
-- Partner: {partner}
-- Dependents: {dependents}
-- Tenure: {tenure} months
-- Contract: {contract}
-- Monthly Charges: ${monthly_charges:.2f}
-- Total Charges: ${total_charges:.2f}
-- Internet Service: {internet_service}
-- Online Security: {online_security}
-- Tech Support: {tech_support}
-- Payment Method: {payment_method}
-
-Recommended Action
-{recommended_action}
-'''
+Recommended Action:
+{recommendation}
+"""
 
     st.download_button(
         label="Download Prediction Report",
@@ -1034,3 +1040,46 @@ Recommended Action
         file_name="customer_churn_prediction_report.txt",
         mime="text/plain"
     )
+
+# =========================
+# Customer Data
+# =========================
+
+st.markdown('<div class="section-title">Customer Records Explorer</div>', unsafe_allow_html=True)
+
+st.markdown("""
+<div class="data-section">
+    <div class="data-note">
+        Explore customer records based on the selected filters. This section keeps the raw customer view available
+        while presenting it inside a controlled analytics workspace.
+    </div>
+</div>
+""", unsafe_allow_html=True)
+
+st.dataframe(
+    df, 
+    use_container_width=True,
+    height=420
+)
+
+csv = df.to_csv(index=False)
+
+st.download_button(
+    label="Download Filtered Customer Records",
+    data=csv,
+    file_name="filtered_customer_churn_data.csv",
+    mime="text/csv"
+)
+
+# =========================
+# Footer
+# =========================
+
+st.markdown("---")
+
+st.markdown("""
+<div class="footer">
+Customer Retention Intelligence Platform © 2026<br>
+AI-powered churn analytics and retention decision support.
+</div>
+""", unsafe_allow_html=True)
