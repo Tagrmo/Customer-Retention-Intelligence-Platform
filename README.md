@@ -122,7 +122,7 @@ Customer churn analysis dashboard built using Power BI.
 - Fiber Optic customers show the highest churn behavior.
 
 
-![Power BI Dashboard](images/powerbi-dashboard4.png)
+![Power BI Dashboard](images/dashboard4.png)
 
 Power BI file:
 `Customer Churn Intelligence Dashboard.pbix`
