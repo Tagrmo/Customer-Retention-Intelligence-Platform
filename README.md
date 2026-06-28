@@ -63,19 +63,19 @@ Performance:
 
 ### Main Dashboard
 
-![Dashboard](images/dashboard4.png)
 
-### Customer Segmentation
 
-![Segmentation](images/dashboard2.png)
 
-### Churn Prediction
 
-![Prediction](images/dashboard3.png)
+![Screenshots1](images/dashboard1.png)
 
-### Executive Report
 
-![Report](images/dashboard1.png)
+
+![Screenshots2](images/dashboard2.png)
+
+
+
+![Screenshots](images/dashboard3.png)
 
 ---
 
@@ -122,7 +122,7 @@ Customer churn analysis dashboard built using Power BI.
 - Fiber Optic customers show the highest churn behavior.
 
 
-![Power BI Dashboard](images/powerbi-dashboard.png)
+![Power BI Dashboard](images/powerbi-dashboard4.png)
 
 Power BI file:
 `Customer Churn Intelligence Dashboard.pbix`
