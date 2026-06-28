@@ -1051,8 +1051,7 @@ st.markdown("""
 <div class="data-section">
     <div class="data-note">
         Explore customer records based on the selected filters. This section keeps the raw customer view available
-        while presenting it inside a controlled analytics workspace.<br>
-        Developed by <strong>Taghreed Mohammed</strong>
+        while presenting it inside a controlled analytics workspace.
     </div>
 </div>
 """, unsafe_allow_html=True)
@@ -1081,6 +1080,7 @@ st.markdown("---")
 st.markdown("""
 <div class="footer">
 Customer Retention Intelligence Platform © 2026<br>
-AI-powered churn analytics and retention decision support.
+AI-powered churn analytics and retention decision support.<br>
+            Developed by <strong>Taghreed Mohammed</strong>
 </div>
 """, unsafe_allow_html=True)
