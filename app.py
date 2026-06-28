@@ -1051,7 +1051,8 @@ st.markdown("""
 <div class="data-section">
     <div class="data-note">
         Explore customer records based on the selected filters. This section keeps the raw customer view available
-        while presenting it inside a controlled analytics workspace.
+        while presenting it inside a controlled analytics workspace.<br>
+        Developed by <strong>Taghreed Mohammed</strong>
     </div>
 </div>
 """, unsafe_allow_html=True)
