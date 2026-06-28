@@ -124,8 +124,6 @@ Customer churn analysis dashboard built using Power BI.
 
 ![Power BI Dashboard](images/dashboard4.png)
 
-Power BI file:
-`Customer Churn Intelligence Dashboard.pbix`
 ---
 
 ## Author
