@@ -120,7 +120,7 @@ Customer churn analysis dashboard built using Power BI.
 - Month-to-Month contracts have the highest churn.
 - Electronic Check users are more likely to churn.
 - Fiber Optic customers show the highest churn behavior.
-
+### Power BI Dashboard
 
 ![Power BI Dashboard](images/dashboard4.png)
 
